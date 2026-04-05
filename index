@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pelanggan Cameron Highlands</title>
+<style>
+  :root {
+    --blue: #1a237e; --blue-light: #e8eaf6; --blue-mid: #3949ab;
+    --purple: #ede7f6; --white: #fff; --gray: #f5f5f5;
+    --red: #c62828; --green: #2e7d32; --border: #c5cae9;
+    --text: #212121; --text-light: #666;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2ff; color: var(--text); }
+
+  /* HEADER */
+  header {
+    background: var(--blue); color: #fff; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px #0003;
+  }
+  header h1 { font-size: 1.1rem; }
+  header span { font-size: 0.8rem; opacity: 0.7; }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: #fff; padding: 12px 20px; display: flex; flex-wrap: wrap;
+    gap: 10px; align-items: center; border-bottom: 2px solid var(--border);
+    position: sticky; top: 57px; z-index: 99; box-shadow: 0 1px 4px #0001;
+  }
+  .toolbar input[type=text] {
+    flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 0.9rem;
+  }
+  .toolbar select {
+    padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 0.9rem; background: #fff;
+  }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 0.85rem; font-weight: bold; transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-danger  { background: var(--red); color: #fff; }
+  .btn-gray    { background: #e0e0e0; color: var(--text); }
+
+  /* STATS BAR */
+  .stats { padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .stat-chip {
+    background: var(--blue-light); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-chip:hover, .stat-chip.active { background: var(--blue); color: #fff; }
+  .stat-chip .count {
+    background: var(--blue); color: #fff; border-radius: 10px;
+    padding: 1px 7px; font-size: 0.75rem; font-weight: bold;
+  }
+  .stat-chip.active .count { background: rgba(255,255,255,0.3); }
+
+  /* TABLE */
+  .table-wrap { padding: 0 20px 30px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: #fff;
+    border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px #0001; }
+  thead tr { background: var(--blue); color: #fff; }
+  thead th { padding: 11px 10px; text-align: left; font-size: 0.82rem;
+    white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #e8eaf6; transition: background 0.15s; }
+  tbody tr:hover { background: #f3f4ff !important; }
+  tbody td { padding: 10px; font-size: 0.82rem; vertical-align: top; }
+  tbody tr.group-even { background: #fff; }
+  tbody tr.group-odd  { background: var(--purple); }
+  tbody tr.group-first td { border-top: 2px solid var(--blue-mid); }
+
+  .name-cell { font-weight: bold; }
+  .phone-cell a { color: var(--blue-mid); text-decoration: none; font-weight: bold; }
+  .phone-cell a:hover { text-decoration: underline; }
+  .order-cell { font-family: monospace; font-size: 0.8rem; color: var(--text-light); }
+  .addr-cell { max-width: 260px; color: var(--text-light); font-size: 0.78rem; line-height: 1.4; }
+  .region-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 12px;
+    font-size: 0.73rem; font-weight: bold; background: var(--blue-light);
+    color: var(--blue); white-space: nowrap;
+  }
+  .action-btn {
+    background: none; border: none; cursor: pointer; padding: 4px 7px;
+    border-radius: 5px; font-size: 0.8rem; transition: background 0.15s;
+  }
+  .action-btn:hover { background: #e8eaf6; }
+  .multi-badge {
+    display: inline-block; background: var(--blue); color: #fff;
+    border-radius: 10px; padding: 1px 7px; font-size: 0.7rem;
+    margin-left: 4px; vertical-align: middle;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: #0006;
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; padding: 28px;
+    width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 8px 32px #0004;
+  }
+  .modal h2 { color: var(--blue); margin-bottom: 18px; font-size: 1rem; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 0.82rem;
+    font-weight: bold; margin-bottom: 5px; color: var(--blue); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+    border-radius: 7px; font-size: 0.88rem; font-family: Arial, sans-serif;
+  }
+  .form-group textarea { resize: vertical; min-height: 70px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 50px; color: var(--text-light); font-size: 0.9rem; }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    .toolbar { top: 50px; }
+    .table-wrap { padding: 0 8px 30px; }
+    thead th:nth-child(6), tbody td:nth-child(6) { display: none; } /* hide address on mobile */
+    .addr-cell { max-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Pelanggan Cameron Highlands</h1>
+  <span id="total-count">0 rekod</span>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="🔍  Cari nama / telefon / order no...">
+  <select id="region-filter">
+    <option value="">Semua Kawasan</option>
+    <option>KAMPUNG RAJA</option>
+    <option>TRINGKAP</option>
+    <option>KEA FARM</option>
+    <option>BRINCHANG</option>
+    <option>TANAH RATA</option>
+    <option>KUALA TERLA</option>
+    <option>RINGLET</option>
+  </select>
+  <button class="btn btn-success" onclick="openAddModal()">＋ Tambah</button>
+  <button class="btn btn-gray" onclick="exportCSV()">⬇ Export CSV</button>
+</div>
+
+<div class="stats" id="stats-bar"></div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>ORDER NO.</th>
+        <th>NAMA</th>
+        <th>TELEFON</th>
+        <th>KAWASAN</th>
+        <th>ALAMAT</th>
+        <th>TINDAKAN</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+  <div class="empty" id="empty-msg" style="display:none">Tiada rekod dijumpai.</div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Tambah Pelanggan Baru</h2>
+    <input type="hidden" id="edit-id">
+    <div class="form-group">
+      <label>Order No.</label>
+      <input type="text" id="f-order" placeholder="cth: 10099449">
+    </div>
+    <div class="form-group">
+      <label>Nama Pelanggan *</label>
+      <input type="text" id="f-name" placeholder="Nama penuh">
+    </div>
+    <div class="form-group">
+      <label>Telefon 1</label>
+      <input type="tel" id="f-p1" placeholder="0123456789">
+    </div>
+    <div class="form-group">
+      <label>Telefon 2</label>
+      <input type="tel" id="f-p2" placeholder="0123456789 (pilihan)">
+    </div>
+    <div class="form-group">
+      <label>Kawasan *</label>
+      <select id="f-region">
+        <option>KAMPUNG RAJA</option>
+        <option>TRINGKAP</option>
+        <option>KEA FARM</option>
+        <option>BRINCHANG</option>
+        <option>TANAH RATA</option>
+        <option>KUALA TERLA</option>
+        <option>RINGLET</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Alamat</label>
+      <textarea id="f-addr" placeholder="Alamat penuh"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal()">Batal</button>
+      <button class="btn btn-danger" id="delete-btn" onclick="deleteRecord()" style="display:none">Padam</button>
+      <button class="btn btn-primary" onclick="saveRecord()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DEFAULT DATA ─────────────────────────────────────────────────────────────
+const DEFAULT_DATA = [
+  {order:"10099449",name:"ZURAIDA BINTI MAD DESA",p1:"054915144",p2:"0195749956",address:"NO 43 KAMPUNG TAMAN SEDIA, TANAH RATA, CAMERON HIGHLAND, Taman Sedia 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10111308",name:"AUH WEI YEE",p1:"0129832768",p2:"0109262768",address:"NO 21 BANDAR BARU CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10118199",name:"ROSMAH BINTI KARAYAN",p1:"6594579600",p2:"0195474588",address:"9-22 EMERALD AVENUE APARTMENTS JALAN, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10201368",name:"NORHALITA BINTI BAKAR",p1:"0133267803",p2:"0194997986",address:"NO.C2-5, CARNATION COURT C, Carnation Park Block A-E, 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10349290",name:"MEGANATHAN A/L PARAMAGURU",p1:"0103834098",p2:"0122159927",address:"J 4-5 PUNCAK ARABELLA, Puncak Arabella 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10356281",name:"SYAFIQ AKMAL BIN OMAR",p1:"0199568832",p2:"0196531381",address:"LMC 3-7 CARNATION PARK 2 TANAH RATA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10382134",name:"CHAN PEIK WAN",p1:"01126414933",p2:"0123163626",address:"B-4-04 PALAS HORIZON RESIDENCES JALAN PALAS HORIZON, Kea Farm 39100 Brinchang Pahang",region:"KEA FARM"},
+  {order:"10386019",name:"BALU A/L CHANDRAN",p1:"0125139722",p2:"0125109722",address:"MA 3A 3A 3A THE QUINTET, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10411107",name:"FAIZZUL IKHMAL BIN ZAINUDIN",p1:"01120779566",p2:"0149441820",address:"PT 3507 JLN BRINCHANG KAMPUNG ME, Sungai Burung 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10412247",name:"RYAN DANIEL A/L RAJU",p1:"0176525848",p2:"0164192491",address:"KASIMANIS STRAWBERRY FARM LOT 1 TANA RATA, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10418053",name:"TAN SWEE PING",p1:"0199907979",p2:"0162282379",address:"NO.1120 HOTEL APARTMENT STAR REGENCY BRINCHANG, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10430720",name:"NURUL SHAHIRA BINTI MD SALLEH",p1:"0174566071",p2:"01136412549",address:"BLOCK B1-903A CROWN IMPERIAL COURT CAMERON HIGHLAND, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10432412",name:"WONG KANG HAU",p1:"0126630139",p2:"019225281",address:"A3-8-5 THE QUINTET JALAN TENGKOLOK CAM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10435224",name:"MUHAMMAD NIZAM BIN BAHARI",p1:"01844646650",p2:"01846446650",address:"D6 FLAT JPN JALAN PECAH BATU WISMA SHAH BANI, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10437514",name:"CHAN GOI SIN",p1:"01116568166",p2:"0124589111",address:"BLOK R T1-11 TAMAN PUNCAK TRINGKAP, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"10440059",name:"CHOW NGOK MUN",p1:"0109393086",p2:"0169616466",address:"JALAN BLUE VALLEY KAMPUNG RAJA, Sungai Ikan Tanah 39010 Cameron Highlands Pahang",region:"KAMPUNG RAJA"},
+  {order:"10442711",name:"NORLIANA BINTI MOHD YUSOFF",p1:"0175848152",p2:"0179695428",address:"101-D KUARTERS JKR JALAN PECAH BATU, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10448365",name:"LOOI WAN HOE",p1:"0125127132",p2:"0175065911",address:"NO.6 PEKAN LAMA CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10534202",name:"CHIN HOOI PENG",p1:"0129596695",p2:"0194957333",address:"A-4-2 TAMAN PUNCAK TRINGKAP CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"10534637",name:"CHIN HOOI PENG",p1:"0129596695",p2:"0194957333",address:"A-4-2 TAMAN PUNCAK TRINGKAP CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"10556912",name:"AMIR SHAHRIL BIN WAZIR",p1:"01136022568",p2:"0124033465",address:"B2-6 PSRN DAYANG ENDAH PUNCAK ARABELLA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10565326",name:"SIM SIEW KEE",p1:"0195528898",p2:"0125058898",address:"LOT TP 77-KR JALAN BESAR, Kampung Raja 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"10572368",name:"MUHAMMAD SHAKIR ALIFF BIN ABU BAKAR",p1:"0142096053",p2:"0174191923",address:"BLOK LILY TINGKAT 2 NO 4 BERET POLIS JPD CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10585614",name:"SITI NOR FADHILAH BINTI MOHD SANI",p1:"0107869093",p2:"0129561861",address:"B3-4-1 BLOK CARNATION KUARTERS POLIS JALAN, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"10597015",name:"AHMAD BADRI BIN JALALUDIN",p1:"0133093536",p2:"0175618080",address:"LOT 16 THE BOXPORT HUB BOXPORT BUSINESS CENTER JALAN BE, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10597034",name:"AHMAD BADRI BIN JALALUDIN",p1:"0133093536",p2:"0175618080",address:"LOT 16 THE BOXPORT HUB BOXPORT BUSINESS CENTER JALAN BE, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10612982",name:"MUHAMMAD FAIZAL BIN MAT DAHARI",p1:"0174348044",p2:"0146009294",address:"B 16 FLAT PKNP JALAN LENGKOK JASAR TANAH RATA CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"10620349",name:"GUNALAN A/L VINAYAGAM",p1:"0123870520",p2:"0179095197",address:"AI-D2 KUARTERS HOSPITAL SULTANA JALAN PERSIARAN DAYANG ENDAH, Kampung Raja 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"28510177",name:"GANG HOOI YAN",p1:"0124466339",p2:"0188844913",address:"NO 13A JALAN CORINA 13 TAMAN DESA CORINA, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"34781122",name:"MERRY JOY BINTI BAHARI",p1:"0168265381",p2:"0194345707",address:"NO 2 KUARTERS PEKERJA RUMAH PERSEKUTUAN CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"35677432",name:"NOR HIDAYAH BINTI AB RAZAK",p1:"0195090976",p2:"0179825461",address:"728B KUARTERS GURU SMK KAMPUNG, Sungai Ikan Tanah 39010 Cameron Highlands Pahang",region:"KAMPUNG RAJA"},
+  {order:"36613092",name:"MUHAMMAD AIZAT BIN ABDUL RAZAK",p1:"01124086414",p2:"0182088123",address:"A4-7 TAMAN PUNCAK ARABELLA, Tanah Tinggi Cameron 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"37345244",name:"MOHD RIZAL BIN ABU BAKAR",p1:"01131086683",p2:"0166280349",address:"M6 DESA ANTHURIUM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"38018844",name:"NURHANANI BINTI RAHIM",p1:"0189753532",p2:"0139143087",address:"JKR 660-2C KUARTERS SG BURUNG, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"39294708",name:"NUR SYUHADA BINTI SABBERI",p1:"0174191923",p2:"0104401923",address:"A-1-15 BLOK A APARTMENT ROYAL LILY JALAN ROYAL LILY CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"40068899",name:"NURUL AZLIN SYALINDA BINTI AZLAN",p1:"0105773010",p2:"0145220736",address:"NO 6/T1/3 BLOK A PRIMA VILLA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"40811099",name:"MOHAMAD IQBAL BIN FAZAL YAMAN",p1:"0139376100",p2:"0132075572",address:"3-19 EMERALD AVENUE APARTMENT LOT 218 JLN EMERALD AVENUE, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"41172077",name:"NOOR ZULAIKA BINTI ZAKARIA",p1:"0185745818",p2:"0112808096",address:"A-14 WISMA MUHIBBAH JALAN PEKAN LAMA, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"46770114",name:"PHATINI BINTI FERDUS",p1:"0125546849",p2:"0195287310",address:"NO 13 JALAN LOJIT AIR, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"49204809",name:"TEEN PHAIK CHAI",p1:"0195712950",p2:"0195641400",address:"NO 20 JALAN CORINA 7 TAMAN DESA CORINA, Kampung Raja 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"49685188",name:"UMI MURNI BINTI ABDUL RAZAK",p1:"0195222031",p2:"01117063516",address:"LOT 33 KG MELAYU DESA KAYANGAN BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"50616444",name:"NOORZURINA BINTI MAT",p1:"0185772452",p2:"0125417458",address:"B-1 HONEYMOON VILLA JALAN PECAH BATU, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"50830312",name:"NURUL AMALINA BINTI MUHAMAD LOAN",p1:"0194073608",p2:"0182494086",address:"NO 97 JALAN LOJIT AIR KAMPUNG MELAYU BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"50967688",name:"HO KIM HUAT",p1:"0165411500",p2:"0173681680",address:"1-11 PEONY SQUARE KUALA TERLA CAMERON HIGHLANDS, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"51233672",name:"NOOR AMYRAH BINTI ABDULLAH",p1:"01131086683",p2:"01139655879",address:"NO.659-A PANGSAPURI PENDIDIKAN PERSIARAN PEKELILING PADANG GOLF MUKIM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"51461926",name:"YEEP JI JING",p1:"0128570614",p2:"0126324454",address:"NO 25 KEA FARM BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"KEA FARM"},
+  {order:"53114978",name:"YUSOFF BIN OSMAN",p1:"0174191923",p2:"0162679008",address:"NO 9,189 EMERALD AVENUE APRTMENT, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"54378977",name:"NGEA GOH SZE MIN",p1:"0126500036",p2:"0103633328",address:"NO 3 RUMAH BUNGLOW JALAN PERSIARAN ROYAL LILY TAMAN ROYAL LILY, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"54456665",name:"AMUTHA VALLI A/P CHUALLY",p1:"0135249202",p2:"0195755022",address:"NO 1 KUARTERS PEJABAT HAIWAN CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"54579977",name:"MUHAMMAD HIZAMI BIN ARSHAD",p1:"01955900600",p2:"054801700",address:"TAMAN MAWAR CAMERON HIGHLANDS, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"54841877",name:"NOOR AZIZAH BINTI ALI",p1:"0137446585",p2:"0178838691",address:"B-6-5-11 PERUMAHAN CAMERON JAYAPURA CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"55442744",name:"CHOW NGOK MUN",p1:"01121236870",p2:"0169616466",address:"B-9-7 PERUMAHAN BLUE VALLEY JAYA KAMPUG RAJA, Sungai Ikan Tanah 39010 Cameron Highlands Pahang",region:"KAMPUNG RAJA"},
+  {order:"56408722",name:"CHIN HENG MEI",p1:"0196959696",p2:"0196929696",address:"CACTUS APARTMENT AG-5 JALAN KAKTUS CACTUS VALLEY, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"56875625",name:"HONG YOKE LAN",p1:"0187885332",p2:"0165575622",address:"EDGE WOOD RESIDENCES SKYSANCTU TOWER A-18-02, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"56901766",name:"HEW YUN QI",p1:"0165566239",p2:"0184747407",address:"BLOK B-3-7 PALAS HORIZON RESIDENCE, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"57448688",name:"MOHD RAMZAN BIN OTHMAN",p1:"01124080831",p2:"",address:"C-1-2-7 PUNCAK TAMAN TRINGKAP BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"57597782",name:"MOORTHY GANASAN A/L RAJAGOPAL",p1:"0122787672",p2:"0122033934",address:"NO.659-A PANGSAPURI PENDIDIKAN PERSIARAN PEKELILING, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"59098577",name:"THINESH A/L MARIYAPAN",p1:"0124042870",p2:"0103795676",address:"NO 2-T1-Q TAMAN TRINGKAP PUNCAK CAMERON HIGHLANDS, Taman Tringkap Puncak 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"59977793",name:"NORAINI BINTI MOHD SHAARI",p1:"0167626147",p2:"0199783703",address:"NO 42 BELAKANG SURAU KAMPUNG MELAYU DESA KAYANGAN, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"60662363",name:"WAN MUHAMMAD FARIS HAKIM BIN WAN RUSHDAN",p1:"0175059239",p2:"01125612978",address:"JKR 775-4D JALAN PECAH BATU FLAT JKR, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"60747966",name:"CHE WANG BIN CHE PIN",p1:"0164177245",p2:"0124924355",address:"93 B JALAN KAMPUNG RAJA, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"60748644",name:"CHE WANG BIN CHE PIN",p1:"0164177245",p2:"0124924355",address:"93 D JALAN KAMPUNG RAJA, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"62108522",name:"MOHD KHAIRUL ANWAR BIN AHMAD",p1:"0125546849",p2:"0129091038",address:"AS-B-07 KUARTERS HOSPITAL SULTANA TANAH RATA CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"62108533",name:"MOHD KHAIRUL ANWAR BIN AHMAD",p1:"0125546849",p2:"0129091038",address:"AS-B-07 KUARTERS HOSPITAL SULTANA TANAH RATA CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"62254844",name:"SEAH XINYI @ XIAO XINYI",p1:"0195712123",p2:"0175738599",address:"NO 48 JALAN CARNATION 3 CARNATION, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"62391695",name:"NOR ATIKAH BINTI ADMIN",p1:"01115009808",p2:"0113506101",address:"NO B5 JALAN LENGKOK JASAR FLAT PK, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"62410132",name:"HILLTOP LUXURY SDN BHD",p1:"0125118079",p2:"0122182987",address:"C-2-45 PRESINT 1 CAMERON CENTRUM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"63786482",name:"MOHD RIZAL BIN JAMALUDIN",p1:"01140448602",p2:"0125757627",address:"2-16 EMERALD AVENUE APARTMENT JALAN EMERALD AVENUE, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"63911793",name:"CHUA YEN NEE",p1:"0142302747",p2:"0125225332",address:"MDCH 36A KAMPUNG BARU, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"63979822",name:"NAZRUL SAFUAN BIN AWANG MAHAT",p1:"0175402608",p2:"01111777764",address:"NO 5-14-Q TAMAN TRINGKAP PUNCAK TRINGKAP, Taman Tringkap Puncak 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"64670513",name:"KOVINDERJEET SINGH A/L INDER SINGH",p1:"0172914298",p2:"0166256649",address:"87 JALAN KUARI BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"64892433",name:"SOLIZ CONSTRUCTION SDN BHD",p1:"099121977",p2:"0133395897",address:"NO.6 FLAT MUHIBBAH BLOK A BRINCHANG, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"65504982",name:"CHANDRAN A/L SINNASAMY",p1:"0165049062",p2:"0125295222",address:"NO 10 TAMAN ROYAL LILY 2, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"65604812",name:"ARTVO CAMERON SDN BHD",p1:"0196093188",p2:"0122011209",address:"UNIT D8 BLOCK DAHLIA GREEN HILL RESORT, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"65661313",name:"SITI ROFIEAH BINTI KAMARUDDIN",p1:"0125649177",p2:"0179391960",address:"NO 2 BELAKANG FLAT WISMA MUHIBBA CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"65802484",name:"ABDUL AZIZ BIN SADIKIN",p1:"0132860343",p2:"0132860321",address:"657B KUARTERS JABATAN PERTANIAN JALAN SULTAN ABU BAKAR CAMERON HIGHLAND, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"68337042",name:"SOFAZAIYANA BINTI IBRAHIM",p1:"0195439420",p2:"0196977274",address:"APARTMENT CAMERON JAYA CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"68364832",name:"BALA MURUGAN A/L CHITIYA GOUANDAN",p1:"0195647156",p2:"0169156245",address:"A-6-3A PERUMAHAN MAKMUR BLUE VALLEY JLN BLUE VALLEY CAMERON HIGHLAND, Kampung Raja 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"68655222",name:"NOOR SYAHIRAH BINTI MOHAMMAD ZULKEPLI",p1:"0125838060",p2:"01140693420",address:"NO 43 TAMAN SEDIA TANAH RATA C HIGHLANDS, Taman Sedia 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"68809202",name:"MUHAMMAD FADHLAN BIN NOR AZHAR",p1:"01163503200",p2:"0123007004",address:"NO A1-06-06 THE QUINTET JALAN PMCJS, Kampung Tringkap 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"69071282",name:"PARTHIBHAN A/L SINNATHAMBY",p1:"0127916121",p2:"0124331790",address:"NO 11, Tanah Rata Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"69279152",name:"NANA KHURIZAN BIN ABDULLAHI",p1:"054915425",p2:"0195721001",address:"F2-1 PERUMAHAN PUNCAK ARABELLA, Puncak Arabella 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"69891012",name:"DEVIPP RIYA A/P ELUMALAI",p1:"0178177819",p2:"0126848719",address:"NO 1-27 PANGSAPURI EMERALD AVENUE JALAN EMERALD AVENUE, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"69903462",name:"NOOR MASLIANA BINTI MUHAMAD RAMLI",p1:"0197483277",p2:"0125932177",address:"A3-A-06 KUARTERS HOSPITAL SULTANA TANAH RATA CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"70175473",name:"MOHAMAD IKHWAN BIN MOHD ZULKIFLI",p1:"0178942259",p2:"0199248416",address:"C3-2-6 JALAN ROYAL LILY 4/1 TAMAN ROYAL LILY, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"70175863",name:"MOHAMAD IKHWAN BIN MOHD ZULKIFLI",p1:"0178942259",p2:"0199248416",address:"C3-2-6 BLOK C3 JALAN ROYAL LILY 4/1 TAMAN ROYAL LILY, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"70582412",name:"WAN AIRIE BIN WAN NAFI",p1:"0148201802",p2:"0137240642",address:"BLOK B3 KUARTERS POLIS JLN BESAR, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"70839222",name:"ROSELIND @ MUNIYAMAL",p1:"0195998469",p2:"0195008467",address:"CPH-6 PENTHOUSE PERSIARAN DAYANG TAMAN RATA CAMERON HIGHLANDS, Puncak Arabella 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"70873953",name:"ARUMUGAM A/L MUNUS AMY",p1:"0146006806",p2:"0195559938",address:"JKR 354B JLN BALAI POLIS RINGLET, Evergreen Villa Ringlet 39200 Cameron Highlands Pahang",region:"RINGLET"},
+  {order:"70885395",name:"TANG SIANG YEE",p1:"0195525993",p2:"0175008022",address:"NO.16 TAMAN MAWAR CAMERON HIGHLANDS, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"70890192",name:"CHEONG SIEW WAI",p1:"0135250888",p2:"0165003113",address:"NO 9,28 ARAS SEMBILAN PANGSAPURI EMERA, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"70930673",name:"THULASHI A/P SILVARAJ",p1:"0146222644",p2:"0102801523",address:"NO.18 BLOK A WISMA MUHIBBAH BRINCHANG, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"71306073",name:"WAN NOR IREMA BINTI WAN HARON",p1:"0199414757",p2:"0129680869",address:"B3-1-1 BLOK CARNATION KUARTERS POLIS BRINCHANG CAMERON, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"71361342",name:"SANTA A/P KANDASAMY",p1:"0194341522",p2:"0132511519",address:"B8-6-13A PERUMAHAN MAKMUR CAMERON JAYA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"71867042",name:"ZALEHA BINTI ABDUL HALIM",p1:"0193714747",p2:"0129865006",address:"B-02-03 PERUMAHAN MAKMUR BLUE VALLEY JLN PAHANG CAMERON HIGHLANDS, Sungai Ikan Tanah 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"72278522",name:"TAN BEOG TING",p1:"0167232107",p2:"0163334819",address:"PERUMAHAN MAKMUR BLUE VALLEY JLN C-2-3A, Sungai Ikan Tanah 39010 Cameron Highlands Pahang",region:"KAMPUNG RAJA"},
+  {order:"73542322",name:"LIM LI NA",p1:"0175535605",p2:"0176740198",address:"NO 6-28 EMERALD AVENUE APARTMENTS JALAN, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"73804382",name:"KOMALAH A/P SUBRAMANIAM",p1:"0194248625",p2:"0164456418",address:"NO 25 TAMAN MAWAR CAMERON HIGHLANDS, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"74126302",name:"RADHA A/P SILVADURAY",p1:"0194752172",p2:"0176131534",address:"LADANG TEH BLUE VALLEY KAMPUNG RAJA CAMERON HIGHLANDS, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"74195922",name:"LOGES WARAN A/L SELLADURAI",p1:"0195601175",p2:"0195035279",address:"A-2-2 TAMAN DESA CORINA CAMERON HIGHLAND, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"74398242",name:"NOR SHAMZAIMAR BINTI MD ZAHID",p1:"0143277799",p2:"01140441885",address:"BC 01-01 BLOK B PERUMAHAN ATM KEM SLIM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"75204942",name:"AHMAD FAZLI BIN AMRAN",p1:"01161916100",p2:"0137807875",address:"NO 36A JALAN PPC3 PUSAT AT PERDAGANGAN, Tanah Rata Batu 49 39010 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"75549932",name:"YEEP XIN YUE",p1:"0125993333",p2:"01112280831",address:"C-1-2-7 PUNCAK TAMAN TRINGKAP BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"75960462",name:"NORSHAKIRA BINTI SHAFIEE",p1:"0143502822",p2:"0135067871",address:"RUMAH KEDIAMAN ANGKATAN TENTER AG-03-09 KEM SLIM, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"76438642",name:"JAGATISAN A/L KARUPANAN",p1:"0162142692",p2:"01136222296",address:"D-2-12 PERUMAHAN 1 MALAYSIA BLUE VALLEY, Kampung Raja 39010 Pahang",region:"KAMPUNG RAJA"},
+  {order:"76660142",name:"P SIVAGANES A/L K PALANISSWAMI",p1:"0179898651",p2:"0126324454",address:"BENGKEL MDCH NO 9A JALAN SULTAN ABU BAKAR BRINCHANG, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"77002972",name:"HAMAWATHY A/P PATCHEPPAN",p1:"0167626147",p2:"01121568191",address:"TAMAN TRINGKAP PUNCAK CAMERON HIGHLAND BLOCK-MT3-4, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"77004162",name:"SURESH KUMAR A/L PALANISAMY",p1:"0165473721",p2:"01126880388",address:"TAMAN PINGGIRAN TERLA KUALA TERLA, Sungai Ikan Tanah 39010 Cameron Highlands Pahang",region:"KUALA TERLA"},
+  {order:"78086532",name:"CHAM LAI FOONG",p1:"6594579600",p2:"0195474588",address:"9-23 EMERALD AVENUE APARTMENTS JALAN, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"78500712",name:"WONG KAH HOONG",p1:"01846665744",p2:"0195474588",address:"NO 80 SD JALAN BESAR KUALA TERLA, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"78618912",name:"CHONG SIEW CHEONG",p1:"0169989088",p2:"0195514698",address:"LEMBAH BERTAM CAMERON HIGHLAND, Ringlet 39200 Ringlet Pahang",region:"RINGLET"},
+  {order:"79477022",name:"MOGAN A/L PERIASAMY",p1:"0182722205",p2:"0165605403",address:"NO 93B CAMERON HIGHLAND, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"79770512",name:"THEINMATHI A/P PANINEET SELUAM",p1:"0174336446",p2:"0109119377",address:"ILAN CORINA 11 TAMAN DESA CORINA SUNGAI IKAN, Sungai Ikan Tanah 39010 Highlands Pahang",region:"KAMPUNG RAJA"},
+  {order:"79861222",name:"MAGISVARI A/P RAJAMANIC KAM",p1:"0109005614",p2:"0135961608",address:"BLOCK C-3-5 PINGGIRAN KUALA TERLA, Kuala Terla 39010 Tanah Rata Pahang",region:"KUALA TERLA"},
+  {order:"79994762",name:"AHMAD BADRI BIN JALALUDIN",p1:"0133093536",p2:"0175618080",address:"NO 36 TAMAN SEDIA TANAH TINGGI CAN TANAH RATA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"80293022",name:"WAN AZIEMAH BINTI WAN AMRAN",p1:"0193012627",p2:"01118615959",address:"EZ CAMERON G10 JALAN CAMELIA CAMERON FAIR CAMERON HIGHLAND, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"80300942",name:"MUHAMMAD SHAKIR ALIFF BIN ABU BAKAR",p1:"0142990053",p2:"0194439176",address:"BLOK LILY TINGKAT 2 NO 4 BERET POLIS JPD CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"81151962",name:"LIM LENG KUNN",p1:"0134524883",p2:"0194616168",address:"A-1-9 JALAN ODP 1 ORCHID DELUXE PARK, Ringlet 39200 Ringlet Pahang",region:"RINGLET"},
+  {order:"81294682",name:"WONG SHI YIN",p1:"0163330120",p2:"0162679008",address:"NO 25 KEA FARM BRINCHANG CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"KEA FARM"},
+  {order:"81498752",name:"TAN YEE LONG",p1:"0128909083",p2:"0128908316",address:"NO.15 TAMAN MCA TRINGKAP, Taman Mca Tringkap 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"83153802",name:"ARTIKA BINTI ABD RAHMAN",p1:"0179210495",p2:"0145082769",address:"496B RUMAH GURU PERSIARAN DAYANG JALAN SK TANAH RATA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"83165072",name:"NOR MARIAH BINTI MAT SAAID",p1:"0163372844",p2:"0163372096",address:"F1-7 PUNCAK ARA BELLA CAMERON HIGHLANDS, Puncak Arabella 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"83208492",name:"MUHAMMAD DINIE FARHAN BIN AZMAN",p1:"01123789441",p2:"0183868178",address:"NO 2 RUMAH STAFF BANGUNAN PEMAS ULU RINGLET RINGLET CAMERON HIGH, Ringlet 39200 Ringlet Pahang",region:"RINGLET"},
+  {order:"83751832",name:"MARRINA BINTI MAT DEKIS",p1:"0148613997",p2:"0105275981",address:"F 47 PUNCAK ARA BELLA CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"85053222",name:"TANG SOK LIAN",p1:"0164218972",p2:"0195197972",address:"NO C-3A-1 JALAN CASSIA 6 TAMAN OMNI CASSIA, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"85085452",name:"MAS NI BINTI MELLI",p1:"0136991060",p2:"0198432568",address:"NO 44 TAMAN TRINGKAP PUNCAK, Brinchang 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"85135482",name:"HAEFIZA BINTI MAT HUSSIN",p1:"0179355811",p2:"0132886501",address:"B6-3-3 PERUMAHAN MAKMUR CAMERON JAYA, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"85359022",name:"GOH TEIK PING",p1:"0162323870",p2:"01126225981",address:"3-T2-S TAMAN TRINGKAP PUNCAK TRINGKAP, Taman Tringkap Puncak 39100 Brinchang Pahang",region:"TRINGKAP"},
+  {order:"86795462",name:"TAVAMANI A/P CHELLAPPAN",p1:"0195272695",p2:"0195701059",address:"NO 28 TAMAN MATAHARI CERAH KAMPUNG RAJA, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"87025782",name:"GEETHA A/P ELAVARASON",p1:"0195030279",p2:"0195601175",address:"NO 51 TAMAN MATAHARI CERAH CAMERON HIGHLAND, Kampung Raja 39010 Tanah Rata Pahang",region:"KAMPUNG RAJA"},
+  {order:"87045612",name:"NUR FARAHHAIN BINTI ISA",p1:"0124628372",p2:"0199783703",address:"JALAN BESAR BRINCHANG CAMERON HIGHLANDS 100-B, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"87228432",name:"SELVAKUMAR A/L ARUNAS ALAM",p1:"0166855695",p2:"0122626018",address:"NO 96 PERSIARAN CAMELIA 2 JALAN BESAR BRINCHANG CAMERON HIGHLANDS, Tanah Rata 39000 Tanah Rata Pahang",region:"TANAH RATA"},
+  {order:"87520552",name:"TENGKU ZAFIRAH BINTI TENGKU OMAR",p1:"0176733528",p2:"0124085505",address:"808 STAR REGENCY HOTEL AND APARTMENT CAMERON HIGHLANDS, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+  {order:"87922002",name:"SITI AMIRA BINTI MOHMAD DRISHAH",p1:"0175154556",p2:"0175154526",address:"G.07 EMERALD AVENUE APARTMENTS JALAN EMERALD AVENUE CAMERON HIGHLAND, Brinchang 39100 Brinchang Pahang",region:"BRINCHANG"},
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const STORE_KEY = 'pelanggan_ch_v1';
+let records = [];
+let filtered = [];
+let currentFilter = '';
+let currentSearch = '';
+
+function loadData() {
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) {
+    records = JSON.parse(saved);
+  } else {
+    records = DEFAULT_DATA.map((r,i) => ({...r, id: i+1}));
+    saveData();
+  }
+}
+function saveData() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(records));
+}
+function nextId() {
+  return records.length ? Math.max(...records.map(r=>r.id)) + 1 : 1;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+const REGIONS = ["KAMPUNG RAJA","TRINGKAP","KEA FARM","BRINCHANG","TANAH RATA","KUALA TERLA","RINGLET"];
+
+function applyFilter() {
+  const q = currentSearch.toLowerCase();
+  filtered = records.filter(r => {
+    const matchRegion = !currentFilter || r.region === currentFilter;
+    const matchSearch = !q ||
+      r.name.toLowerCase().includes(q) ||
+      (r.p1||'').includes(q) ||
+      (r.p2||'').includes(q) ||
+      (r.order||'').includes(q) ||
+      (r.address||'').toLowerCase().includes(q);
+    return matchRegion && matchSearch;
+  });
+  // Sort: by region order, then name, then order
+  const regionIdx = r => REGIONS.indexOf(r.region);
+  filtered.sort((a,b) => {
+    const ri = regionIdx(a) - regionIdx(b);
+    if (ri !== 0) return ri;
+    const ni = a.name.localeCompare(b.name);
+    if (ni !== 0) return ni;
+    return (a.order||'').localeCompare(b.order||'');
+  });
+  renderTable();
+  renderStats();
+  document.getElementById('total-count').textContent = `${filtered.length} rekod`;
+}
+
+function renderStats() {
+  const bar = document.getElementById('stats-bar');
+  const counts = {};
+  records.forEach(r => counts[r.region] = (counts[r.region]||0) + 1);
+  bar.innerHTML = `
+    <div class="stat-chip ${!currentFilter?'active':''}" onclick="setFilter('')">
+      Semua <span class="count">${records.length}</span>
+    </div>` +
+    REGIONS.map(r => `
+    <div class="stat-chip ${currentFilter===r?'active':''}" onclick="setFilter('${r}')">
+      ${r} <span class="count">${counts[r]||0}</span>
+    </div>`).join('');
+}
+
+function setFilter(region) {
+  currentFilter = region;
+  document.getElementById('region-filter').value = region;
+  applyFilter();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('empty-msg');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Count same-name groups for badge
+  const nameCounts = {};
+  filtered.forEach(r => nameCounts[r.name] = (nameCounts[r.name]||0) + 1);
+
+  let prevName = null, groupIdx = -1;
+  tbody.innerHTML = filtered.map((r, i) => {
+    const isFirst = r.name !== prevName;
+    if (isFirst) { groupIdx++; prevName = r.name; }
+    const groupClass = groupIdx % 2 === 0 ? 'group-even' : 'group-odd';
+    const firstClass = isFirst ? ' group-first' : '';
+    const badge = (isFirst && nameCounts[r.name] > 1)
+      ? `<span class="multi-badge">${nameCounts[r.name]} unit</span>` : '';
+    const phone1 = r.p1 ? `<a href="tel:${r.p1}">${r.p1}</a>` : '-';
+    const phone2 = r.p2 ? `<br><a href="tel:${r.p2}" style="opacity:0.7">${r.p2}</a>` : '';
+    return `<tr class="${groupClass}${firstClass}">
+      <td style="color:#999;font-size:0.75rem">${i+1}</td>
+      <td class="order-cell">${r.order||'-'}</td>
+      <td class="name-cell">${r.name}${badge}</td>
+      <td class="phone-cell">${phone1}${phone2}</td>
+      <td><span class="region-badge">${r.region}</span></td>
+      <td class="addr-cell">${r.address||'-'}</td>
+      <td>
+        <button class="action-btn" title="Edit" onclick="openEditModal(${r.id})">✏️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Tambah Pelanggan Baru';
+  document.getElementById('edit-id').value = '';
+  document.getElementById('f-order').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-p1').value = '';
+  document.getElementById('f-p2').value = '';
+  document.getElementById('f-region').value = currentFilter || 'BRINCHANG';
+  document.getElementById('f-addr').value = '';
+  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modal-title').textContent = 'Edit Rekod';
+  document.getElementById('edit-id').value = id;
+  document.getElementById('f-order').value = r.order||'';
+  document.getElementById('f-name').value = r.name;
+  document.getElementById('f-p1').value = r.p1||'';
+  document.getElementById('f-p2').value = r.p2||'';
+  document.getElementById('f-region').value = r.region;
+  document.getElementById('f-addr').value = r.address||'';
+  document.getElementById('delete-btn').style.display = 'inline-block';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function saveRecord() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Sila masukkan nama!'); return; }
+  const id = document.getElementById('edit-id').value;
+  const rec = {
+    order: document.getElementById('f-order').value.trim(),
+    name: name.toUpperCase(),
+    p1: document.getElementById('f-p1').value.trim(),
+    p2: document.getElementById('f-p2').value.trim(),
+    region: document.getElementById('f-region').value,
+    address: document.getElementById('f-addr').value.trim(),
+  };
+  if (id) {
+    const idx = records.findIndex(x => x.id == id);
+    records[idx] = { ...records[idx], ...rec };
+  } else {
+    rec.id = nextId();
+    records.push(rec);
+  }
+  saveData();
+  closeModal();
+  applyFilter();
+}
+
+function deleteRecord() {
+  const id = document.getElementById('edit-id').value;
+  if (!id) return;
+  const r = records.find(x => x.id == id);
+  if (!confirm(`Padam rekod "${r.name}"?\nTindakan ini tidak boleh diundur.`)) return;
+  records = records.filter(x => x.id != id);
+  saveData();
+  closeModal();
+  applyFilter();
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const header = ['Order No','Nama','Telefon 1','Telefon 2','Kawasan','Alamat'];
+  const rows = filtered.map(r =>
+    [r.order, r.name, r.p1, r.p2, r.region, r.address].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')
+  );
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pelanggan_${currentFilter||'semua'}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── EVENTS ───────────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  applyFilter();
+});
+document.getElementById('region-filter').addEventListener('change', e => {
+  currentFilter = e.target.value;
+  applyFilter();
+});
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadData();
+applyFilter();
+</script>
+</body>
+</html>
